@@ -19,7 +19,11 @@ export default defineConfig([
     rules: {
       '@stylistic/arrow-parens': ['error', 'always'],
       '@stylistic/comma-dangle': ['error', 'always-multiline'],
-      '@stylistic/indent': ['error', 2, { SwitchCase: 1, MemberExpression: 'off' }],
+      '@stylistic/indent': [
+        'error',
+        2,
+        { SwitchCase: 1, MemberExpression: 'off' },
+      ],
       '@stylistic/quotes': ['error', 'single'],
       '@stylistic/semi': ['error', 'never'],
       '@stylistic/space-before-function-paren': ['error', 'always'],
@@ -33,7 +37,7 @@ export default defineConfig([
   },
   {
     files: ['**/*.json'],
-    ignores: ['package-lock.json'],
+    ignores: ['tests/package-lock.json', 'package-lock.json'],
     plugins: { json },
     language: 'json/json',
     extends: ['json/recommended'],
