@@ -2,8 +2,10 @@
   "compilerOptions": {
     "baseUrl": ".",
     "paths": {
-      "@pages/*": ["business/pages/*"],
-      "@infra/*": ["infra/*"]
+      "@components": ["business/components/index.ts"],
+      "@pages": ["business/pages/index.ts"],
+      "@fixtures": ["business/fixtures/index.ts"],
+      "@infra": ["infra/index.ts"]
     },
     "module": "nodenext",
     "moduleResolution": "nodenext",
