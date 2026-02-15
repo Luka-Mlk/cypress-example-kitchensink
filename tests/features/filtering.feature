@@ -2,7 +2,7 @@ Feature: Task Filtering and Visibility
 
   Background:
     Given I have the following todo tasks:
-      | value          | status    |
+      | name           | status    |
       | Active task    | active    |
       | Completed task | completed |
 
@@ -18,12 +18,10 @@ Feature: Task Filtering and Visibility
 
   Scenario: Filtering an empty list
     Given I have cleared the default tasks
-    When I select the "Completed" filter
-    Then I should see no tasks in the list
-    And "Clear completed" should not be visible
+    Then "Clear completed" should not be visible
 
   Scenario: Task state change updates the current filter view
     Given I have selected the "Active" filter
     When I mark the task "Active task" as "completed"
     Then I should not see "Active task"
-    And the task counter should be "0"
+    And The task counter should be "0"

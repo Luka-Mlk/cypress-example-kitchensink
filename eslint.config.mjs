@@ -7,7 +7,7 @@ import stylistic from '@stylistic/eslint-plugin'
 import json from '@eslint/json'
 
 export default defineConfig([
-  globalIgnores(['app/assets/js/{vendor,todo}/']),
+  globalIgnores(['app/assets/js/{vendor,todo}/', 'tests/features/gen/**']),
   {
     files: ['**/*.{,m}js'],
     extends: [
@@ -37,7 +37,7 @@ export default defineConfig([
   },
   {
     files: ['**/*.json'],
-    ignores: ['tests/package-lock.json', 'package-lock.json'],
+    ignores: ['tests/package-lock.json', 'package-lock.json', 'tests/features/gen/**'],
     plugins: { json },
     language: 'json/json',
     extends: ['json/recommended'],

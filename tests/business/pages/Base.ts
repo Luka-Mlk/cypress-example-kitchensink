@@ -20,6 +20,7 @@ export abstract class BasePage {
 
   async click(elementName: string, locator: Locator) {
     await this.step(`click ${elementName}`, async () => {
+      await locator.evaluate((el) => (el.style.border = "3px solid orange"));
       await locator.click();
     });
   }

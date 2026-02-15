@@ -1,231 +1,276 @@
 import { Given, When, Then } from "@fixtures";
 
-Given("I have the following todo tasks:", async ({}, dataTable: Object) => {
-  // Step: Given I have the following todo tasks:
-  // From: features/completion.feature:4:5
-});
+Given(
+  "I have the following todo tasks:",
+  async ({ todoPage }, dataTable: { hashes: () => any[] }) => {
+    await todoPage.open();
+    await todoPage.clearState();
+    await todoPage.setupTasks(dataTable.hashes());
+  },
+);
 
 When(
   "I mark the task {string} as {string}",
-  async ({}, arg: string, arg1: string) => {
-    // Step: When I mark the task "Invite guests" as "completed"
-    // From: features/completion.feature:12:5
+  async ({ todoPage }, name: string, status: "active" | "completed") => {
+    await todoPage.completeTask(name, status);
   },
 );
 
 Then(
-  "the task {string} should be {string}",
-  async ({}, arg: string, arg1: string) => {
-    // Step: Then the task "Invite guests" should be "checked"
-    // From: features/completion.feature:13:5
+  "The task {string} should be {string}",
+  async (
+    { todoPage },
+    name: string,
+    state: "checked" | "unchecked" | "hidden",
+  ) => {
+    if (state === "hidden") {
+      await todoPage.verifyTaskState(name, "hidden");
+    } else {
+      await todoPage.verifyTaskChecked(name, state);
+    }
   },
 );
 
 Then(
-  "the task {string} should {string} a strikethrough style",
-  async ({}, arg: string, arg1: string) => {
-    // Step: And the task "Invite guests" should "have" a strikethrough style
-    // From: features/completion.feature:14:5
+  "The task {string} should {string} a strikethrough style",
+  async ({ todoPage }, name: string, action: "have" | "not have") => {
+    const state = action === "have" ? "completed" : "active";
+    await todoPage.verifyTaskState(name, state);
   },
 );
 
-Then("the task counter should be {string}", async ({}, arg: string) => {
-  // Step: And the task counter should be "1"
-  // From: features/completion.feature:15:5
+Then(
+  "The task counter should be {string}",
+  async ({ todoPage }, count: string) => {
+    // Parse string "1" to number
+    await todoPage.verifyRemainingCount(parseInt(count, 10));
+  },
+);
+
+When(
+  "I click the {string} button",
+  async ({ todoPage }, buttonName: string) => {
+    if (buttonName === "Toggle All") {
+      await todoPage.toggleAllTasks();
+    } else if (buttonName === "Clear completed") {
+      await todoPage.clearAllCompleted();
+    } else {
+      throw new Error(
+        `Button "${buttonName}" is not defined in the Page Class logic.`,
+      );
+    }
+  },
+);
+
+Then(
+  "All tasks should be marked as {string}",
+  async ({ todoPage }, status: "completed" | "active") => {
+    await todoPage.verifyAllTasksState(status);
+  },
+);
+
+Given("I have cleared the default tasks", async ({ todoPage }) => {
+  await todoPage.open();
+  await todoPage.clearState();
 });
 
-When("I click the {string} button", async ({}, arg: string) => {
-  // Step: When I click the "Toggle All" button
-  // From: features/completion.feature:24:5
+Given("The input field is visible", async ({ todoPage }) => {
+  await todoPage.verifyInputVisibility("visible");
 });
 
-Then("all tasks should be marked as {string}", async ({}, arg: string) => {
-  // Step: Then all tasks should be marked as "completed"
-  // From: features/completion.feature:25:5
-});
+When(
+  "I add a task with the value {string}",
+  async ({ todoPage }, value: string) => {
+    await todoPage.addNewTask(value);
+  },
+);
 
-Given("I have cleared the default tasks", async ({}) => {
-  // Step: Given I have cleared the default tasks
-  // From: features/creation.feature:4:5
-});
-
-Given("the input field is visible", async ({}) => {
-  // Step: And the input field is visible
-  // From: features/creation.feature:5:5
-});
-
-When("I add a task with the value {string}", async ({}, arg: string) => {
-  // Step: When I add a task with the value "Buy Coffee Filters"
-  // From: features/creation.feature:8:5
-});
-
-Then("the task should be rendered as plain text", async ({}) => {
-  // Step: Then the task should be rendered as plain text
-  // From: features/creation.feature:9:5
-});
-
-Then("the task list should contain {string}", async ({}, arg: string) => {
-  // Step: And the task list should contain "Buy Coffee Filters"
-  // From: features/creation.feature:10:5
-});
-
-When("I add a task with {string} characters", async ({}, arg: string) => {
-  // Step: When I add a task with "1000" characters
-  // From: features/creation.feature:21:5
+Then("The task should be rendered as plain text", async () => {
+  // Semantic marker.
 });
 
 Then(
-  "the task element should not exceed the width of the parent container",
-  async ({}) => {
-    // Step: Then the task element should not exceed the width of the parent container
-    // From: features/creation.feature:22:5
+  "The task list should contain {string}",
+  async ({ todoPage }, expected: string) => {
+    await todoPage.verifyTaskText(expected);
   },
 );
 
-When("I populate the list with:", async ({}, dataTable: Object) => {
-  // Step: When I populate the list with:
-  // From: features/creation.feature:25:5
+When(
+  "I add a task with {string} characters",
+  async ({ todoPage }, length: string) => {
+    const charCount = parseInt(length, 10);
+    const longTaskName = "a".repeat(charCount);
+
+    await todoPage.addNewTask(longTaskName);
+  },
+);
+
+Then(
+  "The task element should not exceed the width of the parent container",
+  async ({ todoPage }) => {
+    await todoPage.verifyLastTaskWidth();
+  },
+);
+
+When(
+  "I populate the list with:",
+  async ({ todoPage }, dataTable: { hashes: () => any[] }) => {
+    await todoPage.setupTasks(dataTable.hashes());
+  },
+);
+
+Then(
+  "The delete button for {string} should be hidden",
+  async ({ todoPage }, name: string) => {
+    await todoPage.verifyDeleteButtonState(name, "hidden");
+  },
+);
+
+When("I hover over the {string} task", async ({ todoPage }, name: string) => {
+  await todoPage.hoverTask(name);
 });
 
 Then(
-  "the delete button for {string} should be hidden",
-  async ({}, arg: string) => {
-    // Step: Then the delete button for "Buy coffee" should be hidden
-    // From: features/deletion.feature:12:5
+  "The delete button for {string} should be visible",
+  async ({ todoPage }, name: string) => {
+    await todoPage.verifyDeleteButtonState(name, "visible");
   },
 );
 
-When("I hover over the {string} task", async ({}, arg: string) => {
-  // Step: When I hover over the "Buy coffee" task
-  // From: features/deletion.feature:13:5
+When("I delete the task {string}", async ({ todoPage }, name: string) => {
+  await todoPage.removeTask(name);
 });
 
 Then(
-  "the delete button for {string} should be visible",
-  async ({}, arg: string) => {
-    // Step: Then the delete button for "Buy coffee" should be visible
-    // From: features/deletion.feature:14:5
+  "The task {string} should not be visible",
+  async ({ todoPage }, name: string) => {
+    await todoPage.verifyTaskState(name, "hidden");
   },
 );
 
-When("I delete the task {string}", async ({}, arg: string) => {
-  // Step: When I delete the task "Buy coffee filters"
-  // From: features/deletion.feature:17:5
+When("I click {string}", async ({ todoPage }, action: string) => {
+  await todoPage.clickButtonByText(action);
 });
 
-Then("the task {string} should not be visible", async ({}, arg: string) => {
-  // Step: Then the task "Buy coffee filters" should not be visible
-  // From: features/deletion.feature:18:5
-});
-
-When("I click {string}", async ({}, arg: string) => {
-  // Step: When I click "Clear completed"
-  // From: features/deletion.feature:27:5
-});
-
-Then("{string} should not be visible", async ({}, arg: string) => {
-  // Step: And "Clear completed" should not be visible
-  // From: features/deletion.feature:30:5
+Then("{string} should not be visible", async ({ todoPage }, text: string) => {
+  await todoPage.verifyTaskState(text, "hidden");
 });
 
 When(
   "I rename the task {string} to {string}",
-  async ({}, arg: string, arg1: string) => {
-    // Step: When I rename the task "Buy coffee" to "Buy espresso"
-    // From: features/editing.feature:11:5
+  async ({ todoPage }, oldName: string, newName: string) => {
+    await todoPage.renameTask(oldName, newName);
   },
 );
 
-Then("I should see {string} in the list", async ({}, arg: string) => {
-  // Step: Then I should see "Buy espresso" in the list
-  // From: features/editing.feature:12:5
-});
+Then(
+  "I should see {string} in the list",
+  async ({ todoPage }, name: string) => {
+    await todoPage.verifyTaskText(name);
+  },
+);
 
-Then("I should not see {string} in the list", async ({}, arg: string) => {
-  // Step: And I should not see "Buy coffee" in the list
-  // From: features/editing.feature:13:5
+Then(
+  "I should not see {string} in the list",
+  async ({ todoPage }, name: string) => {
+    await todoPage.verifyTaskState(name, "hidden");
+  },
+);
+
+When(
+  "I start editing {string} and press {string}",
+  async ({ todoPage }, name: string, key: "Escape" | "Enter" | "Blur") => {
+    // We pass the same name as newName to simulate starting the edit
+    // and then cancelling/closing with the specific key action.
+    await todoPage.renameTask(name, "New Edit", key);
+  },
+);
+
+Then(
+  "The task should still be {string}",
+  async ({ todoPage }, name: string) => {
+    // Verifies the text remains unchanged or is restored to the original value
+    await todoPage.verifyTaskText(name);
+  },
+);
+
+Then("The edit input should not be visible", async ({ todoPage }) => {
+  await todoPage.verifyNoTaskIsEditing();
 });
 
 When(
-  "I start editing {string} but press {string}",
-  async ({}, arg: string, arg1: string) => {
-    // Step: When I start editing "Grind beans" but press "Escape"
-    // From: features/editing.feature:21:5
+  "I change {string} to {string}",
+  async ({ todoPage }, oldName: string, newName: string) => {
+    await todoPage.renameTask(oldName, newName);
   },
 );
 
-Then("the task should still be {string}", async ({}, arg: string) => {
-  // Step: Then the task should still be "Grind beans"
-  // From: features/editing.feature:22:5
-});
-
-Then("the edit input should not be visible", async ({}) => {
-  // Step: And the edit input should not be visible
-  // From: features/editing.feature:23:5
-});
-
-When("I change {string} to {string}", async ({}, arg: string, arg1: string) => {
-  // Step: When I change "Buy coffee" to "Buy arabica"
-  // From: features/editing.feature:26:5
-});
-
-When("I click outside the task", async ({}) => {
-  // Step: And I click outside the task
-  // From: features/editing.feature:27:5
+When("I click outside the task", async ({ todoPage }) => {
+  await todoPage.clickOutside();
 });
 
 Then(
   "the task {string} should be removed from the list",
-  async ({}, arg: string) => {
-    // Step: Then the task "Grind beans" should be removed from the list
-    // From: features/editing.feature:32:5
+  async ({ todoPage }, name: string) => {
+    await todoPage.verifyTaskState(name, "hidden");
   },
 );
 
-When("I select the {string} filter", async ({}, arg: string) => {
-  // Step: When I select the "Active" filter
-  // From: features/filtering.feature:10:5
+When(
+  "I select the {string} filter",
+  async ({ todoPage }, filterName: "All" | "Active" | "Completed") => {
+    await todoPage.filterTasks(filterName);
+  },
+);
+
+Then("I should see {string}", async ({ todoPage }, name: string) => {
+  await todoPage.verifyTaskText(name);
 });
 
-Then("I should see {string}", async ({}, arg: string) => {
-  // Step: Then I should see "Active task"
-  // From: features/filtering.feature:11:5
+Then("I should not see {string}", async ({ todoPage }, name: string) => {
+  await todoPage.verifyTaskState(name, "hidden");
 });
 
-Then("I should not see {string}", async ({}, arg: string) => {
-  // Step: And I should not see "Completed task"
-  // From: features/filtering.feature:12:5
+Then("I should see no tasks in the list", async ({ todoPage }) => {
+  await todoPage.verifyNoTasksVisible();
 });
 
-Then("I should see no tasks in the list", async ({}) => {
-  // Step: Then I should see no tasks in the list
-  // From: features/filtering.feature:22:5
-});
+Given(
+  "I have selected the {string} filter",
+  async ({ todoPage }, filterName: "All" | "Active" | "Completed") => {
+    // Background/Setup step to set the initial filter state
+    await todoPage.filterTasks(filterName);
+  },
+);
 
-Given("I have selected the {string} filter", async ({}, arg: string) => {
-  // Step: Given I have selected the "Active" filter
-  // From: features/filtering.feature:26:5
-});
-
-When("I add the following tasks:", async ({}, dataTable: Object) => {
-  // Step: When I add the following tasks:
-  // From: features/ordering.feature:7:5
-});
+When(
+  "I add the following tasks:",
+  async ({ todoPage }, dataTable: { hashes: () => any[] }) => {
+    // Iterates through the table and adds each task one by one
+    for (const row of dataTable.hashes()) {
+      await todoPage.addNewTask(row.name);
+    }
+  },
+);
 
 Then(
   "{string} should be at position {string}",
-  async ({}, arg: string, arg1: string) => {
-    // Step: Then "Task A" should be at position "1"
-    // From: features/ordering.feature:11:5
+  async ({ todoPage }, name: string, position: string) => {
+    // Convert string "1" to number
+    await todoPage.verifyTaskPosition(name, parseInt(position, 10));
   },
 );
 
-Given("I have the following tasks in order:", async ({}, dataTable: Object) => {
-  // Step: Given I have the following tasks in order:
-  // From: features/ordering.feature:15:5
-});
+Given(
+  "I have the following tasks in order:",
+  async ({ todoPage }, dataTable: { hashes: () => any[] }) => {
+    await todoPage.open();
+    await todoPage.clearState();
+    await todoPage.setupTasks(dataTable.hashes());
+  },
+);
 
-When("I reload the page", async ({}) => {
-  // Step: When I reload the page
-  // From: features/ordering.feature:19:5
+When("I reload the page", async ({ todoPage }) => {
+  await todoPage.reload();
 });

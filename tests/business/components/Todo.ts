@@ -17,8 +17,10 @@ export class Todo extends BasePage {
     this.todoCount = this.page.locator(".todo-count");
   }
 
-  private row(taskName: string): Locator {
-    return this.todoList.locator("li").filter({ hasText: taskName });
+  private row(name: string) {
+    return this.todoList.locator("li").filter({
+      has: this.page.getByText(name, { exact: true }),
+    });
   }
 
   async add(name: string) {
@@ -26,8 +28,19 @@ export class Todo extends BasePage {
     await this.page.keyboard.press("Enter");
   }
 
-  async toggle(name: string) {
-    await this.click(`toggle ${name}`, this.row(name).locator(".toggle"));
+  async toggle(name: string, targetState: "completed" | "active") {
+    const item = this.row(name);
+    const checkbox = item.locator(".toggle");
+
+    await this.step(`ensure task "${name}" is ${targetState}`, async () => {
+      const classes = await item.getAttribute("class");
+      const isCompleted = classes?.includes("completed");
+      const currentState = isCompleted ? "completed" : "active";
+
+      if (currentState !== targetState) {
+        await this.click(`toggle ${name}`, checkbox);
+      }
+    });
   }
 
   async remove(name: string) {
@@ -36,33 +49,24 @@ export class Todo extends BasePage {
     await this.click(`remove ${name}`, item.locator(".destroy"));
   }
 
+  async removeFirst() {
+    const firstItem = this.todoList.locator("li").first();
+    await firstItem.hover();
+    await this.click("Delete button", firstItem.locator(".destroy"));
+  }
+
   async edit(
     name: string,
     newName: string,
     action: "Enter" | "Blur" | "Escape" = "Enter",
   ) {
-    await this.step(`edit "${name}" to "${newName}" by ${action}`, async () => {
-      const row = this.row(name);
-
-      // Needs to be double clicked since input element isint visible before this action
-      await row.locator("label").dblclick();
-
-      // The actual input field appears
-      const editInput = row.locator("input.edit");
-      await this.fill("edit input", editInput, newName);
-
-      switch (action) {
-        case "Enter":
-          await this.page.keyboard.press("Enter");
-          break;
-        case "Escape":
-          await this.page.keyboard.press("Escape");
-          break;
-        case "Blur":
-          // clicking away causes blur event
-          await this.page.locator("h1").click();
-          break;
-      }
+    const row = this.row(name);
+    await row.locator("label").dblclick();
+    await this.fill("edit input", row.locator("input.edit"), newName);
+    await this.step(`finish edit with ${action}`, async () => {
+      if (action === "Enter") await this.page.keyboard.press("Enter");
+      if (action === "Escape") await this.page.keyboard.press("Escape");
+      if (action === "Blur") await this.page.locator("h1").click();
     });
   }
 
@@ -76,35 +80,43 @@ export class Todo extends BasePage {
   }
 
   async bulkToggle() {
-    await this.step("toggle all tasks", async () => {
-      await this.click(`bulk toggle tasks`, this.toggleAll);
-      await this.toggleAll.click();
-    });
+    await this.click(`bulk toggle tasks`, this.toggleAll);
   }
 
   async clearCompleted() {
-    await this.step("clear completed steps", async () => {
-      await this.click(`clear completed steps`, this.clearBtn);
-    });
+    await this.click(`clear completed tasks`, this.clearBtn);
+  }
+
+  async hoverTask(name: string) {
+    await this.row(name).hover();
+  }
+
+  async getTaskCount(): Promise<number> {
+    return this.todoList.locator("li").count();
+  }
+
+  async getTaskNames(): Promise<string[]> {
+    return this.todoList.locator("li label").allInnerTexts();
+  }
+
+  async getLastTaskName(): Promise<string> {
+    return this.todoList.locator("li label").last().innerText();
   }
 
   async expectTask(name: string, state: "completed" | "active" | "hidden") {
     const item = this.row(name);
-
     await this.step(`verify task "${name}" is ${state}`, async () => {
       if (state === "hidden") {
         await this.expectHidden(name, item);
       } else {
-        const isCompleted = state === "completed";
-        const decoration = isCompleted ? /line-through/ : "none";
-
+        const decoration = state === "completed" ? /line-through/ : "none";
         await this.expectStyle(
           "text decoration",
           item.locator("label"),
           "text-decoration",
           decoration,
         );
-        isCompleted
+        state === "completed"
           ? await expect(item).toHaveClass(/completed/)
           : await expect(item).not.toHaveClass("completed");
       }
@@ -112,19 +124,56 @@ export class Todo extends BasePage {
   }
 
   async expectActiveCount(expectedCount: number) {
-    await this.step(
-      `verify active tasks counter is ${expectedCount}`,
-      async () => {
-        // Handles plurals
-        const suffix = expectedCount === 1 ? "item left" : "items left";
-        const expectedText = `${expectedCount} ${suffix}`;
+    // Handles plurals
+    const suffix = expectedCount === 1 ? "item left" : "items left";
+    const expectedText = `${expectedCount} ${suffix}`;
+    await this.expectText("active count", this.todoCount, expectedText);
+  }
 
-        await this.expectText(
-          "active tasks counter",
-          this.todoCount,
-          expectedText,
-        );
-      },
-    );
+  async expectTaskPosition(name: string, position: number) {
+    const item = this.todoList.locator("li").nth(position - 1);
+    await expect(item).toContainText(name);
+  }
+
+  async expectDeleteButtonVisibility(
+    name: string,
+    state: "visible" | "hidden",
+  ) {
+    const btn = this.row(name).locator(".destroy");
+    state === "visible"
+      ? await expect(btn).toBeVisible()
+      : await expect(btn).toBeHidden();
+  }
+
+  async expectClearCompletedVisibility(state: "visible" | "hidden") {
+    state === "visible"
+      ? await expect(this.clearBtn).toBeVisible()
+      : await expect(this.clearBtn).toBeHidden();
+  }
+
+  async expectTaskWidthFits(name: string) {
+    const item = this.row(name);
+    const containerWidth = await this.todoList.evaluate((el) => el.clientWidth);
+    const itemWidth = await item.evaluate((el) => el.clientWidth);
+    expect(itemWidth).toBeLessThanOrEqual(containerWidth);
+  }
+
+  async expectEditInputVisibility(name: string, state: "visible" | "hidden") {
+    const editInput = this.row(name).locator("input.edit");
+    state === "visible"
+      ? await expect(editInput).toBeVisible()
+      : await expect(editInput).toBeHidden();
+  }
+
+  async expectTaskText(name: string) {
+    await expect(this.row(name)).toHaveText(name);
+  }
+
+  async expectNoTasksEditing() {
+    await expect(this.todoList.locator("li.editing")).toHaveCount(0);
+  }
+
+  async expectEmptyList() {
+    await expect(this.todoList.locator("li")).toHaveCount(0);
   }
 }

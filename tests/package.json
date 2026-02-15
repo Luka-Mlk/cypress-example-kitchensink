@@ -4,7 +4,8 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "npx bddgen && npx playwright test",
+    "test:report": "npx allure serve allure-result"
   },
   "keywords": [],
   "author": "",
@@ -13,6 +14,7 @@
   "devDependencies": {
     "@playwright/test": "^1.40.0",
     "@types/node": "^25.2.3",
+    "allure-commandline": "^2.36.0",
     "allure-playwright": "^2.10.0",
     "playwright-bdd": "^8.4.2",
     "ts-node": "^10.9.0",
