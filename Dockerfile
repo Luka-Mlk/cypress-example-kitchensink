@@ -1,25 +1,21 @@
-# This Docker file is for building this project on Codeship Pro
-# https://documentation.codeship.com/pro/languages-frameworks/nodejs/
+FROM node:20
 
-# use Cypress provided image with all dependencies included
-FROM cypress/base:24.13.0
-RUN node --version
-RUN npm --version
-WORKDIR /home/node/app
-# copy our test application
-COPY package.json package-lock.json ./
-COPY app ./app
-COPY serve.json ./
-COPY scripts ./scripts
-# copy Cypress tests
-COPY cypress.config.js cypress ./
-COPY cypress ./cypress
+WORKDIR /app
+ENV CI=true
+ENV APP_URL=http://localhost:8080/todo
 
-# avoid many lines of progress bars during install
-# https://github.com/cypress-io/cypress/issues/1243
-ENV CI=1
+COPY . .
 
-# install npm dependencies and Cypress binary
-RUN npm ci
-# check if the binary was installed successfully
-RUN npx cypress verify
+RUN npm install
+
+WORKDIR /app/tests
+
+RUN npm install
+RUN npx playwright install
+RUN npx playwright install-deps chromium
+
+VOLUME /app/tests/allure-result
+
+WORKDIR /app
+
+ENTRYPOINT ["/bin/bash", "/app/build-test-pipeline.sh"]

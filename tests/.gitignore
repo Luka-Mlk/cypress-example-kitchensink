@@ -1,0 +1,4 @@
+features/gen/features
+allure-result
+test-results
+.env

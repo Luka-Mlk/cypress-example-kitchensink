@@ -7,7 +7,7 @@ import stylistic from '@stylistic/eslint-plugin'
 import json from '@eslint/json'
 
 export default defineConfig([
-  globalIgnores(['app/assets/js/{vendor,todo}/']),
+  globalIgnores(['app/assets/js/{vendor,todo}/', 'tests/features/gen/**']),
   {
     files: ['**/*.{,m}js'],
     extends: [
@@ -19,7 +19,11 @@ export default defineConfig([
     rules: {
       '@stylistic/arrow-parens': ['error', 'always'],
       '@stylistic/comma-dangle': ['error', 'always-multiline'],
-      '@stylistic/indent': ['error', 2, { SwitchCase: 1, MemberExpression: 'off' }],
+      '@stylistic/indent': [
+        'error',
+        2,
+        { SwitchCase: 1, MemberExpression: 'off' },
+      ],
       '@stylistic/quotes': ['error', 'single'],
       '@stylistic/semi': ['error', 'never'],
       '@stylistic/space-before-function-paren': ['error', 'always'],
@@ -33,7 +37,7 @@ export default defineConfig([
   },
   {
     files: ['**/*.json'],
-    ignores: ['package-lock.json'],
+    ignores: ['tests/package-lock.json', 'package-lock.json', 'tests/features/gen/**'],
     plugins: { json },
     language: 'json/json',
     extends: ['json/recommended'],

@@ -16,6 +16,7 @@
     "print-env": "print-env",
     "lint": "eslint --fix",
     "lint:yaml": "yamllint '*.yml' '.buildkite/*.yml' '.circleci/*.yml' '.github/workflows/*.yml' '.semaphore/*.yml' 'basic/**/*.yml' ",
+    "allure:preview": "cd tests && npx allure serve allure-result",
     "e2e": "cypress run",
     "e2e:chrome": "cypress run --browser chrome",
     "e2e:edge": "cypress run --browser edge",
