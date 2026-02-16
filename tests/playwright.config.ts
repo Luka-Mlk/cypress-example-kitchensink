@@ -32,8 +32,8 @@ const config: PlaywrightTestConfig = {
   ],
   webServer: {
     command: "npm run start",
-    url: "http://localhost:8080/todo",
-    reuseExistingServer: !process.env.CI,
+    url: process.env.APP_URL,
+    reuseExistingServer: true,
   },
 };
 

@@ -4,8 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "npx bddgen && npx playwright test",
-    "test:report": "npx allure serve allure-result"
+    "test": "npx bddgen && npx playwright test"
   },
   "keywords": [],
   "author": "",
